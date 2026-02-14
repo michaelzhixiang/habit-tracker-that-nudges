@@ -118,6 +118,53 @@
     }
     .heatmap-cell.today { box-shadow: inset 0 0 0 2px #c17f59; }
     .heatmap-cell:not(.empty):hover { box-shadow: 0 0 0 1px #2d2a26; }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.75rem;
+      margin-top: 1.25rem;
+    }
+    .stat-card {
+      background: linear-gradient(135deg, #fff 0%, #faf7f2 100%);
+      border: 1px solid #e8e4df;
+      border-radius: 6px;
+      padding: 0.875rem 1rem;
+      text-align: center;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(45,42,38,0.08);
+    }
+    .stat-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #c17f59;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.2;
+      margin-bottom: 0.25rem;
+    }
+    .stat-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #6b6560;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .stat-sublabel {
+      font-size: 0.6875rem;
+      color: #9c968f;
+      margin-top: 0.25rem;
+    }
+    .stat-trend {
+      display: inline-block;
+      font-size: 0.75rem;
+      margin-left: 0.25rem;
+      font-weight: 600;
+    }
+    .stat-trend.up { color: #059669; }
+    .stat-trend.down { color: #dc2626; }
+    .stat-trend.neutral { color: #6b6560; }
     .card {
       background: #fff;
       border-radius: 8px;
@@ -287,6 +334,206 @@
       transition: background 0.2s ease, transform 0.15s ease;
     }
     .install-banner button:hover { background: #a96b48; transform: translateY(-1px); }
+    .settings-icon {
+      background: transparent;
+      border: none;
+      color: #6b6560;
+      cursor: pointer;
+      padding: 0.5rem;
+      font-size: 1.25rem;
+      line-height: 1;
+      transition: color 0.2s ease, transform 0.15s ease;
+    }
+    .settings-icon:hover { color: #2d2a26; transform: rotate(30deg); }
+    .settings-panel {
+      position: fixed;
+      top: 0;
+      right: -100%;
+      width: min(360px, 90vw);
+      height: 100vh;
+      background: #fff;
+      box-shadow: -4px 0 20px rgba(0,0,0,0.12);
+      z-index: 1000;
+      transition: right 0.3s ease;
+      overflow-y: auto;
+      padding: 1.5rem;
+    }
+    .settings-panel.open { right: 0; }
+    .settings-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.3);
+      z-index: 999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .settings-overlay.open { opacity: 1; pointer-events: all; }
+    .settings-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    .settings-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #2d2a26;
+      margin: 0;
+    }
+    .settings-close {
+      background: transparent;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #6b6560;
+      padding: 0.25rem;
+      line-height: 1;
+    }
+    .settings-close:hover { color: #2d2a26; }
+    .settings-section {
+      margin-bottom: 1.75rem;
+    }
+    .settings-section-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #2d2a26;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.75rem;
+    }
+    .settings-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid #f5f2ed;
+    }
+    .settings-item:last-child { border-bottom: none; }
+    .settings-item-label {
+      font-size: 0.9375rem;
+      color: #2d2a26;
+      font-weight: 500;
+    }
+    .settings-item-desc {
+      font-size: 0.8125rem;
+      color: #6b6560;
+      margin-top: 0.25rem;
+    }
+    .toggle-switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #e8e4df;
+      border-radius: 24px;
+      transition: 0.3s;
+    }
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: 0.3s;
+    }
+    .toggle-switch input:checked + .toggle-slider {
+      background: #c17f59;
+    }
+    .toggle-switch input:checked + .toggle-slider:before {
+      transform: translateX(20px);
+    }
+    .time-input {
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #e8e4df;
+      border-radius: 6px;
+      font-size: 0.9375rem;
+      color: #2d2a26;
+      width: 120px;
+    }
+    .time-input:focus {
+      outline: none;
+      border-color: #c17f59;
+      box-shadow: 0 0 0 2px rgba(193,127,89,0.25);
+    }
+    .notification-status {
+      padding: 0.75rem 1rem;
+      background: #f5f2ed;
+      border-radius: 6px;
+      font-size: 0.8125rem;
+      color: #6b6560;
+      margin-top: 0.5rem;
+    }
+    .notification-status.granted {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .notification-status.denied {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .btn-insights {
+      width: 100%;
+      background: linear-gradient(135deg, #c17f59 0%, #a96b48 100%);
+      color: #fff;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 2px 8px rgba(193,127,89,0.3);
+    }
+    .btn-insights:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(193,127,89,0.4);
+    }
+    .btn-insights:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .insights-content {
+      margin-top: 1rem;
+      padding: 1rem;
+      background: #faf7f2;
+      border-radius: 8px;
+      border: 1px solid #e8e4df;
+      font-size: 0.9375rem;
+      line-height: 1.6;
+      color: #2d2a26;
+      white-space: pre-wrap;
+    }
+    .insights-content.loading {
+      text-align: center;
+      color: #6b6560;
+      font-style: italic;
+    }
+    .insights-content.error {
+      background: #fee2e2;
+      border-color: #fecaca;
+      color: #991b1b;
+    }
   </style>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -300,13 +547,17 @@
         <h1 id="title">习惯追踪</h1>
         <p class="subtitle" id="subtitle">每天三个小习惯，轻量坚持</p>
       </div>
-      <button type="button" class="lang-toggle" id="langToggle" aria-label="Switch language">English</button>
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <button type="button" class="settings-icon" id="settingsBtn" aria-label="Settings" title="设置">⚙️</button>
+        <button type="button" class="lang-toggle" id="langToggle" aria-label="Switch language">English</button>
+      </div>
     </header>
 
     <section class="heatmap-section" id="heatmapSection">
       <div class="heatmap-title" id="heatmapTitle">本月</div>
       <div class="heatmap-weekdays" id="heatmapWeekdays"></div>
       <div class="heatmap-grid" id="heatmapGrid"></div>
+      <div class="stats-grid" id="statsGrid"></div>
     </section>
 
     <main id="habitList"></main>
@@ -325,8 +576,51 @@
     </div>
   </div>
 
+  <!-- Settings Panel -->
+  <div class="settings-overlay" id="settingsOverlay"></div>
+  <div class="settings-panel" id="settingsPanel">
+    <div class="settings-header">
+      <h2 class="settings-title" id="settingsTitle">设置</h2>
+      <button type="button" class="settings-close" id="settingsClose" aria-label="Close">×</button>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title" id="notificationSectionTitle">推送通知</div>
+
+      <div class="settings-item">
+        <div>
+          <div class="settings-item-label" id="enableNotificationLabel">启用每日提醒</div>
+          <div class="settings-item-desc" id="enableNotificationDesc">在设定时间收到习惯提醒</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="notificationToggle">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="settings-item" id="reminderTimeItem">
+        <div>
+          <div class="settings-item-label" id="reminderTimeLabel">提醒时间</div>
+          <div class="settings-item-desc" id="reminderTimeDesc">每天提醒的时间</div>
+        </div>
+        <input type="time" class="time-input" id="reminderTime" value="09:00">
+      </div>
+
+      <div class="notification-status" id="notificationStatus"></div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title" id="insightsSectionTitle">AI 洞察</div>
+      <button type="button" class="btn-insights" id="getInsightsBtn">
+        <span id="insightsBtnText">📊 查看习惯分析</span>
+      </button>
+      <div class="insights-content hidden" id="insightsContent"></div>
+    </div>
+  </div>
+
   <script>
     const STORAGE_KEY = 'habit-tracker-data';
+    const BACKUP_KEY = 'habit-tracker-data-backup';
     const LANG_KEY = 'habit-tracker-lang';
     var nudgeEmoji = '';
 
@@ -377,6 +671,29 @@
         installBtn: '添加',
         tipLoading: '正在生成建议…',
         tipError: '无法获取建议，请确认已用 API 密钥启动服务',
+        settingsTitle: '设置',
+        notificationSectionTitle: '推送通知',
+        enableNotificationLabel: '启用每日提醒',
+        enableNotificationDesc: '在设定时间收到习惯提醒',
+        reminderTimeLabel: '提醒时间',
+        reminderTimeDesc: '每天提醒的时间',
+        notificationDefault: '点击开关请求通知权限',
+        notificationGranted: '✓ 通知权限已授予',
+        notificationDenied: '✗ 通知权限被拒绝，请在浏览器设置中允许',
+        notificationBlocked: '浏览器不支持通知功能',
+        notificationTitle: '习惯追踪提醒',
+        notificationBody: '该完成今天的习惯了！',
+        insightsSectionTitle: 'AI 洞察',
+        insightsBtnText: '📊 查看习惯分析',
+        insightsBtnLoading: '分析中...',
+        insightsError: '无法获取洞察，请确认已用 API 密钥启动服务',
+        insightsEmpty: '还没有足够的数据来分析。继续记录你的习惯吧！',
+        statMonthlyRate: '本月完成率',
+        statLongestStreak: '最长连续',
+        statThisWeek: '本周',
+        statLastWeek: '上周',
+        statDays: '天',
+        statCompleted: '完成',
       },
       en: {
         title: 'Habit Tracker',
@@ -396,6 +713,29 @@
         installBtn: 'Add',
         tipLoading: 'Generating suggestion…',
         tipError: 'Could not get suggestion. Run the app with API key.',
+        settingsTitle: 'Settings',
+        notificationSectionTitle: 'Push Notifications',
+        enableNotificationLabel: 'Enable daily reminders',
+        enableNotificationDesc: 'Receive habit reminders at set time',
+        reminderTimeLabel: 'Reminder time',
+        reminderTimeDesc: 'Time to remind daily',
+        notificationDefault: 'Toggle to request notification permission',
+        notificationGranted: '✓ Notification permission granted',
+        notificationDenied: '✗ Notification permission denied. Please allow in browser settings',
+        notificationBlocked: 'Browser does not support notifications',
+        notificationTitle: 'Habit Tracker Reminder',
+        notificationBody: 'Time to complete your habits!',
+        insightsSectionTitle: 'AI Insights',
+        insightsBtnText: '📊 View Habit Analysis',
+        insightsBtnLoading: 'Analyzing...',
+        insightsError: 'Could not get insights. Run the app with API key.',
+        insightsEmpty: 'Not enough data to analyze yet. Keep tracking your habits!',
+        statMonthlyRate: 'Monthly Rate',
+        statLongestStreak: 'Longest Streak',
+        statThisWeek: 'This Week',
+        statLastWeek: 'Last Week',
+        statDays: 'days',
+        statCompleted: 'completed',
       },
     };
 
@@ -427,8 +767,19 @@
       document.getElementById('langToggle').textContent = i18n[lang].langToggle;
       document.getElementById('installText').textContent = i18n[lang].installText;
       document.getElementById('installBtn').textContent = i18n[lang].installBtn;
+      document.getElementById('settingsBtn').title = lang === 'zh' ? '设置' : 'Settings';
       const heatTitle = document.getElementById('heatmapTitle');
       if (heatTitle) heatTitle.textContent = i18n[lang].heatmapTitle;
+      // Settings panel
+      document.getElementById('settingsTitle').textContent = i18n[lang].settingsTitle;
+      document.getElementById('notificationSectionTitle').textContent = i18n[lang].notificationSectionTitle;
+      document.getElementById('enableNotificationLabel').textContent = i18n[lang].enableNotificationLabel;
+      document.getElementById('enableNotificationDesc').textContent = i18n[lang].enableNotificationDesc;
+      document.getElementById('reminderTimeLabel').textContent = i18n[lang].reminderTimeLabel;
+      document.getElementById('reminderTimeDesc').textContent = i18n[lang].reminderTimeDesc;
+      document.getElementById('insightsSectionTitle').textContent = i18n[lang].insightsSectionTitle;
+      document.getElementById('insightsBtnText').textContent = i18n[lang].insightsBtnText;
+      updateNotificationStatus();
       document.querySelectorAll('[data-i18n]').forEach(function (el) {
         const key = el.getAttribute('data-i18n');
         if (i18n[lang][key] != null) el.textContent = i18n[lang][key];
@@ -440,12 +791,23 @@
         const raw = localStorage.getItem(STORAGE_KEY);
         return raw ? JSON.parse(raw) : [];
       } catch {
+        // If main data is corrupted, try to restore from backup
+        try {
+          const backup = localStorage.getItem(BACKUP_KEY);
+          if (backup) {
+            const data = JSON.parse(backup);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            return data;
+          }
+        } catch {}
         return [];
       }
     }
 
     function saveHabits(habits) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(habits));
+      // Auto-backup after every save
+      localStorage.setItem(BACKUP_KEY, JSON.stringify(habits));
     }
 
     function today() {
@@ -536,6 +898,123 @@
         }
         grid.appendChild(div);
       });
+      renderStats(habits);
+    }
+
+    function getLongestStreak(habits) {
+      let maxStreak = 0;
+      habits.forEach(h => {
+        const completedDates = (h.completedDates || []).sort();
+        if (completedDates.length === 0) return;
+        let currentStreak = 1;
+        for (let i = 1; i < completedDates.length; i++) {
+          const prev = new Date(completedDates[i - 1]);
+          const curr = new Date(completedDates[i]);
+          prev.setDate(prev.getDate() + 1);
+          if (prev.toISOString().slice(0, 10) === curr.toISOString().slice(0, 10)) {
+            currentStreak++;
+          } else {
+            maxStreak = Math.max(maxStreak, currentStreak);
+            currentStreak = 1;
+          }
+        }
+        maxStreak = Math.max(maxStreak, currentStreak);
+      });
+      return maxStreak;
+    }
+
+    function getWeeklyCompletion(habits, weekOffset) {
+      const now = new Date();
+      const dayOfWeek = now.getDay();
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - dayOfWeek + weekOffset * 7);
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+      let completed = 0;
+      let total = 0;
+      for (let d = 0; d < 7; d++) {
+        const checkDate = new Date(startOfWeek);
+        checkDate.setDate(startOfWeek.getDate() + d);
+        const dateStr = checkDate.toISOString().slice(0, 10);
+        if (checkDate <= now) {
+          habits.forEach(h => {
+            total++;
+            if ((h.completedDates || []).includes(dateStr)) {
+              completed++;
+            }
+          });
+        }
+      }
+      return { completed, total };
+    }
+
+    function getMonthlyCompletionRate(habits) {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const today = now.getDate();
+
+      let completed = 0;
+      let total = 0;
+
+      for (let d = 1; d <= today && d <= daysInMonth; d++) {
+        const dateStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+        habits.forEach(h => {
+          total++;
+          if ((h.completedDates || []).includes(dateStr)) {
+            completed++;
+          }
+        });
+      }
+
+      return total > 0 ? Math.round((completed / total) * 100) : 0;
+    }
+
+    function renderStats(habits) {
+      const statsGrid = document.getElementById('statsGrid');
+      if (!statsGrid || habits.length === 0) {
+        if (statsGrid) statsGrid.innerHTML = '';
+        return;
+      }
+
+      const lang = getLang();
+      const monthlyRate = getMonthlyCompletionRate(habits);
+      const longestStreak = getLongestStreak(habits);
+      const thisWeek = getWeeklyCompletion(habits, 0);
+      const lastWeek = getWeeklyCompletion(habits, -1);
+
+      const thisWeekRate = thisWeek.total > 0 ? Math.round((thisWeek.completed / thisWeek.total) * 100) : 0;
+      const lastWeekRate = lastWeek.total > 0 ? Math.round((lastWeek.completed / lastWeek.total) * 100) : 0;
+      const weekTrend = thisWeekRate > lastWeekRate ? 'up' : thisWeekRate < lastWeekRate ? 'down' : 'neutral';
+      const weekTrendSymbol = thisWeekRate > lastWeekRate ? '↑' : thisWeekRate < lastWeekRate ? '↓' : '→';
+
+      statsGrid.innerHTML =
+        '<div class="stat-card">' +
+        '<div class="stat-value">' + monthlyRate + '%</div>' +
+        '<div class="stat-label">' + t('statMonthlyRate') + '</div>' +
+        '</div>' +
+        '<div class="stat-card">' +
+        '<div class="stat-value">' + longestStreak + '</div>' +
+        '<div class="stat-label">' + t('statLongestStreak') + '</div>' +
+        '<div class="stat-sublabel">' + t('statDays') + '</div>' +
+        '</div>' +
+        '<div class="stat-card">' +
+        '<div class="stat-value">' +
+        thisWeek.completed + '<span style="font-size: 1rem; color: #6b6560;">/' + thisWeek.total + '</span>' +
+        '</div>' +
+        '<div class="stat-label">' + t('statThisWeek') + '</div>' +
+        '<div class="stat-sublabel">' + t('statCompleted') + '</div>' +
+        '</div>' +
+        '<div class="stat-card">' +
+        '<div class="stat-value">' +
+        thisWeekRate + '%' +
+        '<span class="stat-trend ' + weekTrend + '">' + weekTrendSymbol + '</span>' +
+        '</div>' +
+        '<div class="stat-label">' + (lang === 'zh' ? '周对比' : 'vs Last Week') + '</div>' +
+        '<div class="stat-sublabel">' + t('statLastWeek') + ': ' + lastWeekRate + '%</div>' +
+        '</div>';
     }
 
     function showTipLoading(habitId) {
@@ -799,9 +1278,211 @@
     renderHabits();
     fetchEmojis(loadHabits(), true).then(function () { renderHabits(); });
 
+    // --- Daily auto-refresh ---
+    let lastRenderedDate = today();
+
+    // Schedule a refresh at midnight
+    function scheduleMidnightRefresh() {
+      const now = new Date();
+      const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+      const msUntilMidnight = tomorrow - now + 500; // +500ms buffer
+      setTimeout(function () {
+        lastRenderedDate = today();
+        renderHabits();
+        scheduleMidnightRefresh(); // schedule the next one
+      }, msUntilMidnight);
+    }
+    scheduleMidnightRefresh();
+
+    // Also refresh when the user returns to the tab on a new day
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden && today() !== lastRenderedDate) {
+        lastRenderedDate = today();
+        renderHabits();
+      }
+    });
+
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch(function () {});
     }
+
+    // ==================== Notification Settings ====================
+    const NOTIFICATION_SETTINGS_KEY = 'habit-tracker-notification-settings';
+
+    function getNotificationSettings() {
+      try {
+        const raw = localStorage.getItem(NOTIFICATION_SETTINGS_KEY);
+        return raw ? JSON.parse(raw) : { enabled: false, time: '09:00' };
+      } catch {
+        return { enabled: false, time: '09:00' };
+      }
+    }
+
+    function saveNotificationSettings(settings) {
+      localStorage.setItem(NOTIFICATION_SETTINGS_KEY, JSON.stringify(settings));
+    }
+
+    function updateNotificationStatus() {
+      const statusEl = document.getElementById('notificationStatus');
+      if (!statusEl) return;
+      const lang = getLang();
+      if (!('Notification' in window)) {
+        statusEl.textContent = i18n[lang].notificationBlocked;
+        statusEl.className = 'notification-status denied';
+        return;
+      }
+      const permission = Notification.permission;
+      if (permission === 'granted') {
+        statusEl.textContent = i18n[lang].notificationGranted;
+        statusEl.className = 'notification-status granted';
+      } else if (permission === 'denied') {
+        statusEl.textContent = i18n[lang].notificationDenied;
+        statusEl.className = 'notification-status denied';
+      } else {
+        statusEl.textContent = i18n[lang].notificationDefault;
+        statusEl.className = 'notification-status';
+      }
+    }
+
+    async function requestNotificationPermission() {
+      if (!('Notification' in window)) return false;
+      if (Notification.permission === 'granted') return true;
+      if (Notification.permission === 'denied') return false;
+      const permission = await Notification.requestPermission();
+      updateNotificationStatus();
+      return permission === 'granted';
+    }
+
+    function sendNotification(title, body) {
+      if (!('Notification' in window)) return;
+      if (Notification.permission !== 'granted') return;
+      try {
+        new Notification(title, {
+          body: body,
+          icon: 'icon.svg',
+          badge: 'icon.svg',
+          tag: 'habit-reminder',
+          renotify: true,
+        });
+      } catch (e) {
+        console.error('Failed to send notification:', e);
+      }
+    }
+
+    function checkAndSendReminder() {
+      const settings = getNotificationSettings();
+      if (!settings.enabled) return;
+      if (Notification.permission !== 'granted') return;
+
+      const now = new Date();
+      const currentTime = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+      const reminderTime = settings.time || '09:00';
+
+      // Check if it's the reminder time (with 1 minute tolerance)
+      if (currentTime === reminderTime) {
+        const habits = loadHabits();
+        const incompleteTasks = habits.filter(h => !h.done).length;
+        if (incompleteTasks > 0) {
+          const lang = getLang();
+          const title = i18n[lang].notificationTitle;
+          const body = i18n[lang].notificationBody;
+          sendNotification(title, body);
+        }
+      }
+    }
+
+    // Check for reminders every minute
+    setInterval(checkAndSendReminder, 60000);
+
+    // Settings panel controls
+    document.getElementById('settingsBtn').onclick = function () {
+      document.getElementById('settingsPanel').classList.add('open');
+      document.getElementById('settingsOverlay').classList.add('open');
+      // Load current settings
+      const settings = getNotificationSettings();
+      document.getElementById('notificationToggle').checked = settings.enabled;
+      document.getElementById('reminderTime').value = settings.time;
+      updateNotificationStatus();
+    };
+
+    function closeSettingsPanel() {
+      document.getElementById('settingsPanel').classList.remove('open');
+      document.getElementById('settingsOverlay').classList.remove('open');
+    }
+
+    document.getElementById('settingsClose').onclick = closeSettingsPanel;
+    document.getElementById('settingsOverlay').onclick = closeSettingsPanel;
+
+    document.getElementById('notificationToggle').onchange = async function () {
+      const enabled = this.checked;
+      if (enabled) {
+        const granted = await requestNotificationPermission();
+        if (!granted) {
+          this.checked = false;
+          return;
+        }
+      }
+      const settings = getNotificationSettings();
+      settings.enabled = enabled;
+      saveNotificationSettings(settings);
+      updateNotificationStatus();
+    };
+
+    document.getElementById('reminderTime').onchange = function () {
+      const settings = getNotificationSettings();
+      settings.time = this.value;
+      saveNotificationSettings(settings);
+    };
+
+    // ==================== AI Insights ====================
+    async function fetchInsights() {
+      const lang = getLang();
+      const habits = loadHabits();
+
+      // Check if there's enough data
+      const hasData = habits.some(h => (h.completedDates || []).length > 0);
+      if (!hasData) {
+        return { error: false, insights: i18n[lang].insightsEmpty };
+      }
+
+      try {
+        const res = await fetch('/api/insights', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ habits, lang }),
+        });
+        if (!res.ok) throw new Error('API error');
+        const data = await res.json();
+        return { error: false, insights: data.insights || '' };
+      } catch (e) {
+        return { error: true, insights: i18n[lang].insightsError };
+      }
+    }
+
+    document.getElementById('getInsightsBtn').onclick = async function () {
+      const btn = this;
+      const btnText = document.getElementById('insightsBtnText');
+      const content = document.getElementById('insightsContent');
+      const lang = getLang();
+
+      // Disable button and show loading
+      btn.disabled = true;
+      btnText.textContent = i18n[lang].insightsBtnLoading;
+      content.className = 'insights-content loading';
+      content.classList.remove('hidden');
+      content.textContent = i18n[lang].insightsBtnLoading;
+
+      // Fetch insights
+      const result = await fetchInsights();
+
+      // Display results
+      content.className = 'insights-content' + (result.error ? ' error' : '');
+      content.textContent = result.insights;
+
+      // Re-enable button
+      btn.disabled = false;
+      btnText.textContent = i18n[lang].insightsBtnText;
+    };
   </script>
 </body>
 </html>

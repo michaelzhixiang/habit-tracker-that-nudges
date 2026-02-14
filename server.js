@@ -5,6 +5,7 @@
  * Without this server, "完成不了" will show a fallback message.
  */
 
+require('dotenv').config();
 const path = require('path');
 const express = require('express');
 const app = express();
@@ -84,6 +85,83 @@ app.post('/api/suggest', async (req, res) => {
     return res.json({ suggestion: text || (isZh ? '今天先做最小一步即可。' : 'Just do the smallest step today.') });
   } catch (e) {
     console.error('Suggest error', e);
+    return res.status(500).json({ error: 'Request failed' });
+  }
+});
+
+app.post('/api/insights', async (req, res) => {
+  if (!API_KEY) return res.status(503).json({ error: 'ANTHROPIC_API_KEY not set' });
+  const { habits, lang } = req.body || {};
+  if (!Array.isArray(habits) || habits.length === 0) {
+    return res.status(400).json({ error: 'habits array required' });
+  }
+
+  const isZh = (lang || 'en').toLowerCase().startsWith('zh');
+
+  // Analyze habit data
+  const today = new Date();
+  const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const weekdaysZh = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+
+  let analysis = '';
+  habits.forEach((habit, idx) => {
+    const completedDates = habit.completedDates || [];
+    const totalDays = completedDates.length;
+
+    // Analyze day-of-week patterns
+    const dayCount = [0, 0, 0, 0, 0, 0, 0];
+    completedDates.forEach(dateStr => {
+      const d = new Date(dateStr);
+      dayCount[d.getDay()]++;
+    });
+
+    const bestDay = dayCount.indexOf(Math.max(...dayCount));
+
+    // Calculate streak
+    const sortedDates = [...completedDates].sort().reverse();
+    let currentStreak = 0;
+    const todayStr = today.toISOString().split('T')[0];
+    if (sortedDates[0] === todayStr) {
+      currentStreak = 1;
+      for (let i = 1; i < sortedDates.length; i++) {
+        const prev = new Date(sortedDates[i - 1]);
+        const curr = new Date(sortedDates[i]);
+        prev.setDate(prev.getDate() - 1);
+        if (prev.toISOString().split('T')[0] !== curr.toISOString().split('T')[0]) break;
+        currentStreak++;
+      }
+    }
+
+    const habitName = habit.name || `Habit ${idx + 1}`;
+    const bestDayName = isZh ? weekdaysZh[bestDay] : weekdays[bestDay];
+
+    if (isZh) {
+      analysis += `【${habitName}】完成 ${totalDays} 天，当前连续 ${currentStreak} 天。`;
+      if (totalDays > 3) {
+        analysis += `${bestDayName}完成率最高（${dayCount[bestDay]}次）。`;
+      }
+    } else {
+      analysis += `【${habitName}】Completed ${totalDays} days, current streak ${currentStreak} days.`;
+      if (totalDays > 3) {
+        analysis += ` Best on ${bestDayName} (${dayCount[bestDay]} times).`;
+      }
+    }
+    analysis += '\n';
+  });
+
+  const systemPrompt = isZh
+    ? '你是一个数据分析助手，分析用户的习惯追踪数据，给出简洁、实用的洞察。用 2-4 个要点总结模式和建议。每个要点一句话，直接、具体，不要啰嗦。用友好、鼓励的语气，但不要过度励志。使用 emoji 让建议更生动。'
+    : 'You are a data analyst assistant. Analyze user habit tracking data and provide concise, actionable insights. Summarize patterns and suggestions in 2-4 bullet points. Each point: one sentence, direct and specific. Friendly and encouraging tone, but not overly motivational. Use emojis to make suggestions vivid.';
+
+  const userPrompt = isZh
+    ? `分析以下习惯数据，给出 2-4 个洞察要点（用 • 开头）：\n\n${analysis}\n\n要点格式：\n• [emoji] [一句话洞察/建议]\n只输出要点，不要前言或总结。`
+    : `Analyze the following habit data and provide 2-4 insight bullet points (start with •):\n\n${analysis}\n\nFormat:\n• [emoji] [one-sentence insight/suggestion]\nOutput only bullet points, no intro or conclusion.`;
+
+  try {
+    const text = await callClaude(systemPrompt, userPrompt, 300);
+    return res.json({ insights: text || (isZh ? '继续保持，你做得很好！' : 'Keep going, you\'re doing great!') });
+  } catch (e) {
+    console.error('Insights error', e);
     return res.status(500).json({ error: 'Request failed' });
   }
 });
