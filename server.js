@@ -5,15 +5,14 @@
  * Without this server, "完成不了" will show a fallback message.
  */
 
-const express = require('express');
 const path = require('path');
-
+const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 3001;
 const API_KEY = process.env.ANTHROPIC_API_KEY;
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname)));
+app.use(express.static(__dirname));
 
 async function callClaude(systemPrompt, userPrompt, maxTokens = 150) {
   const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -87,6 +86,11 @@ app.post('/api/suggest', async (req, res) => {
     console.error('Suggest error', e);
     return res.status(500).json({ error: 'Request failed' });
   }
+});
+
+// 所有其他请求返回 index.html
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.listen(PORT, () => {
