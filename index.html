@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#faf7f2" />
+  <title>习惯追踪 / Habit Tracker</title>
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #faf7f2;
+      padding: 1.5rem;
+      color: #2d2a26;
+      -webkit-font-smoothing: antialiased;
+      transition: transform 0.3s ease;
+    }
+    body.screen-shake { animation: screenShake 0.5s ease-in-out; }
+    @keyframes screenShake {
+      0%,100% { transform: translateX(0); }
+      20% { transform: translateX(-6px) translateY(2px); }
+      40% { transform: translateX(6px) translateY(-2px); }
+      60% { transform: translateX(-4px) translateY(1px); }
+      80% { transform: translateX(4px) translateY(-1px); }
+    }
+    .container { max-width: 520px; margin: 0 auto; }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+    h1 {
+      margin: 0;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #2d2a26;
+      letter-spacing: -0.03em;
+    }
+    .subtitle { margin: 0.35rem 0 0 0; font-size: 0.875rem; color: #6b6560; font-weight: 400; }
+    .lang-toggle {
+      background: #fff;
+      border: 1px solid #e8e4df;
+      color: #6b6560;
+      padding: 0.4rem 0.75rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    }
+    .lang-toggle:hover { background: #f5f2ed; color: #2d2a26; border-color: #d4cfc8; }
+    .heatmap-section {
+      background: #fff;
+      border: 1px solid #e8e4df;
+      padding: 1.5rem 1.5rem 1.75rem;
+      margin-bottom: 1.5rem;
+      border-radius: 6px;
+    }
+    .heatmap-title {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: #2d2a26;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 1rem;
+    }
+    .heatmap-weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      margin-bottom: 6px;
+      max-width: 100%;
+    }
+    .heatmap-weekday {
+      text-align: center;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: #6b6560;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      line-height: 1.4;
+    }
+    .heatmap-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      max-width: 100%;
+    }
+    .heatmap-cell {
+      aspect-ratio: 1;
+      border-radius: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      transition: box-shadow 0.15s ease;
+    }
+    .heatmap-cell[data-count="0"] { background: #f5f2ed; color: #6b6560; }
+    .heatmap-cell[data-count="1"] { background: #ebd5c8; color: #5c4a3d; }
+    .heatmap-cell[data-count="2"] { background: #d4a574; color: #fff; }
+    .heatmap-cell[data-count="3"] { background: #a96b48; color: #fff; }
+    .heatmap-cell.empty { background: transparent; color: transparent; }
+    .heatmap-cell[data-count="1"],
+    .heatmap-cell[data-count="2"],
+    .heatmap-cell[data-count="3"] { animation: heatmapFill 0.35s ease-out both; }
+    @keyframes heatmapFill {
+      from { transform: scale(0.85); opacity: 0.6; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .heatmap-cell.today { box-shadow: inset 0 0 0 2px #c17f59; }
+    .heatmap-cell:not(.empty):hover { box-shadow: 0 0 0 1px #2d2a26; }
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 0.75rem;
+      box-shadow: 0 1px 2px rgba(45,42,38,0.06);
+      border: 1px solid #e8e4df;
+      transition: box-shadow 0.2s ease;
+    }
+    .card:hover { box-shadow: 0 4px 12px rgba(45,42,38,0.08); }
+    .habit-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .habit-emoji { font-size: 1.1rem; line-height: 1; }
+    .habit-row input[type="checkbox"] {
+      width: 22px;
+      height: 22px;
+      cursor: pointer;
+      flex-shrink: 0;
+      accent-color: #c17f59;
+      transition: transform 0.15s ease;
+    }
+    .habit-row input[type="checkbox"]:hover { transform: scale(1.08); }
+    .habit-name { flex: 1; min-width: 0; font-size: 0.9375rem; font-weight: 500; color: #2d2a26; }
+    .habit-name.done { text-decoration: line-through; color: #9c968f; }
+    .btn {
+      border: none;
+      border-radius: 6px;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      min-height: 36px;
+      transition: background 0.2s ease, transform 0.15s ease;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-small { padding: 0.35rem 0.5rem; min-height: 32px; font-size: 0.75rem; }
+    .btn-tired {
+      background: #f5f2ed;
+      color: #6b6560;
+      border: 1px solid #e8e4df;
+    }
+    .btn-tired:hover {
+      background: #ede9e3;
+      color: #2d2a26;
+      animation: wiggle 0.5s ease-in-out;
+    }
+    @keyframes wiggle {
+      0%,100% { transform: rotate(0deg); }
+      25% { transform: rotate(-2deg); }
+      75% { transform: rotate(2deg); }
+    }
+    .btn-menu {
+      width: 32px;
+      height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      color: #94a3b8;
+      border-radius: 8px;
+      padding: 0;
+      min-height: 32px;
+    }
+    .btn-menu:hover { background: #f1f5f9; color: #475569; }
+    .btn-menu svg { width: 18px; height: 18px; }
+    .menu-dropdown {
+      position: absolute;
+      right: 0;
+      top: 100%;
+      margin-top: 4px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+      border: 1px solid rgba(0,0,0,0.06);
+      padding: 4px;
+      min-width: 120px;
+      z-index: 10;
+      animation: menuIn 0.15s ease;
+    }
+    @keyframes menuIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+    .menu-dropdown button {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 0.5rem 0.75rem;
+      border: none;
+      background: none;
+      border-radius: 6px;
+      font-size: 0.8125rem;
+      color: #475569;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .menu-dropdown button:hover { background: #f8fafc; color: #1e293b; }
+    .menu-dropdown button.delete:hover { color: #dc2626; }
+    .menu-wrap { position: relative; }
+    .habit-name.inline-edit { display: none; }
+    .habit-edit-input {
+      width: 100%;
+      max-width: 200px;
+      padding: 0.35rem 0.5rem;
+      border: 1px solid #c7d2fe;
+      border-radius: 6px;
+      font-size: 0.9375rem;
+    }
+    .habit-edit-input:focus { outline: none; border-color: #c17f59; box-shadow: 0 0 0 2px rgba(193,127,89,0.25); }
+    .streak-row { margin-top: 0.5rem; font-size: 0.8125rem; color: #6b6560; }
+    .streak-row strong { color: #059669; font-weight: 600; }
+    .tip-box {
+      margin-top: 0.75rem;
+      padding: 0.875rem 1rem;
+      background: #fff;
+      border-radius: 8px;
+      border: 1px solid #e8e4df;
+      font-family: "Fredoka", "DM Sans", sans-serif;
+      font-size: 1.1rem;
+      line-height: 1.5;
+      color: #2d2a26;
+    }
+    .tip-box .close-tip { margin-top: 0.5rem; font-family: "DM Sans", sans-serif; color: #c17f59; cursor: pointer; font-size: 0.8125rem; font-weight: 500; transition: opacity 0.15s; }
+    .tip-box .close-tip:hover { opacity: 0.8; }
+    .tip-box-error { background: #fef2f2; border-color: #fecaca; color: #b91c1c; font-family: "DM Sans", sans-serif; }
+    .add-section {
+      background: #fff;
+      border-radius: 8px;
+      padding: 1.25rem;
+      margin-top: 1rem;
+      box-shadow: 0 1px 2px rgba(45,42,38,0.06);
+      border: 1px solid #e8e4df;
+    }
+    .add-section.hidden { display: none; }
+    .add-row { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+    .add-row input {
+      flex: 1;
+      padding: 0.6rem 0.75rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.9375rem;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .add-row input:focus { outline: none; border-color: #c17f59; box-shadow: 0 0 0 2px rgba(193,127,89,0.25); }
+    .btn-add { background: #c17f59; color: #fff; }
+    .btn-add:hover { background: #a96b48; transform: translateY(-1px); }
+    .install-banner {
+      margin-top: 1.25rem;
+      padding: 0.75rem 1rem;
+      background: #f5f2ed;
+      border-radius: 8px;
+      border: 1px solid #e8e4df;
+      color: #2d2a26;
+      font-size: 0.8125rem;
+    }
+    .install-banner.hidden { display: none; }
+    .install-banner button {
+      margin-left: 0.5rem;
+      padding: 0.35rem 0.6rem;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      background: #c17f59;
+      color: #fff;
+      font-weight: 500;
+      transition: background 0.2s ease, transform 0.15s ease;
+    }
+    .install-banner button:hover { background: #a96b48; transform: translateY(-1px); }
+  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=DM+Sans:wght@400;500;600&family=Fredoka:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1 id="title">习惯追踪</h1>
+        <p class="subtitle" id="subtitle">每天三个小习惯，轻量坚持</p>
+      </div>
+      <button type="button" class="lang-toggle" id="langToggle" aria-label="Switch language">English</button>
+    </header>
+
+    <section class="heatmap-section" id="heatmapSection">
+      <div class="heatmap-title" id="heatmapTitle">本月</div>
+      <div class="heatmap-weekdays" id="heatmapWeekdays"></div>
+      <div class="heatmap-grid" id="heatmapGrid"></div>
+    </section>
+
+    <main id="habitList"></main>
+
+    <section class="add-section" id="addSection">
+      <p id="addHint">最多添加 3 个习惯</p>
+      <div class="add-row">
+        <input type="text" id="habitInput" placeholder="" maxlength="50" />
+        <button type="button" class="btn btn-add" id="addBtn"></button>
+      </div>
+    </section>
+
+    <div class="install-banner hidden" id="installBanner">
+      <span id="installText">添加到主屏幕，像 App 一样使用</span>
+      <button type="button" id="installBtn">添加</button>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'habit-tracker-data';
+    const LANG_KEY = 'habit-tracker-lang';
+    var nudgeEmoji = '';
+
+    function playDing() {
+      try {
+        var ctx = new (window.AudioContext || window.webkitAudioContext)();
+        var o = ctx.createOscillator();
+        var g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.frequency.value = 880; o.type = 'sine';
+        g.gain.setValueAtTime(0.12, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+        o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.15);
+      } catch (e) {}
+    }
+    function playVictory() {
+      try {
+        var ctx = new (window.AudioContext || window.webkitAudioContext)();
+        var o = ctx.createOscillator();
+        var g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.type = 'sine';
+        o.frequency.setValueAtTime(523.25, ctx.currentTime);
+        o.frequency.setValueAtTime(659.25, ctx.currentTime + 0.12);
+        o.frequency.setValueAtTime(783.99, ctx.currentTime + 0.24);
+        g.gain.setValueAtTime(0.15, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+        o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.4);
+      } catch (e) {}
+    }
+
+    const i18n = {
+      zh: {
+        title: '习惯追踪',
+        subtitle: '每天三个小习惯，轻量坚持',
+        addHint: '最多添加 3 个习惯',
+        addPlaceholder: '输入习惯名称',
+        add: '添加',
+        cant: '推我一把',
+        gotIt: '知道了',
+        edit: '编辑',
+        delete: '删除',
+        streak: '连续',
+        heatmapTitle: '本月',
+        weekdays: ['日', '一', '二', '三', '四', '五', '六'],
+        langToggle: 'English',
+        installText: '添加到主屏幕，像 App 一样使用',
+        installBtn: '添加',
+        tipLoading: '正在生成建议…',
+        tipError: '无法获取建议，请确认已用 API 密钥启动服务',
+      },
+      en: {
+        title: 'Habit Tracker',
+        subtitle: 'Up to 3 habits a day, keep it simple.',
+        addHint: 'Add up to 3 habits',
+        addPlaceholder: 'Habit name',
+        add: 'Add',
+        cant: 'Nudge me',
+        gotIt: 'Got it',
+        edit: 'Edit',
+        delete: 'Delete',
+        streak: 'Streak',
+        heatmapTitle: 'This month',
+        weekdays: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+        langToggle: '中文',
+        installText: 'Add to home screen to use like an app',
+        installBtn: 'Add',
+        tipLoading: 'Generating suggestion…',
+        tipError: 'Could not get suggestion. Run the app with API key.',
+      },
+    };
+
+    function getLang() {
+      const saved = localStorage.getItem(LANG_KEY);
+      if (saved === 'zh' || saved === 'en') return saved;
+      return navigator.language && navigator.language.toLowerCase().startsWith('zh') ? 'zh' : 'en';
+    }
+
+    function setLang(lang) {
+      localStorage.setItem(LANG_KEY, lang);
+      renderLang();
+      renderHabits();
+      document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+    }
+
+    function t(key) {
+      const lang = getLang();
+      return i18n[lang][key] ?? key;
+    }
+
+    function renderLang() {
+      const lang = getLang();
+      document.getElementById('title').textContent = i18n[lang].title;
+      document.getElementById('subtitle').textContent = i18n[lang].subtitle;
+      document.getElementById('addHint').textContent = i18n[lang].addHint;
+      document.getElementById('habitInput').placeholder = i18n[lang].addPlaceholder;
+      document.getElementById('addBtn').textContent = i18n[lang].add;
+      document.getElementById('langToggle').textContent = i18n[lang].langToggle;
+      document.getElementById('installText').textContent = i18n[lang].installText;
+      document.getElementById('installBtn').textContent = i18n[lang].installBtn;
+      const heatTitle = document.getElementById('heatmapTitle');
+      if (heatTitle) heatTitle.textContent = i18n[lang].heatmapTitle;
+      document.querySelectorAll('[data-i18n]').forEach(function (el) {
+        const key = el.getAttribute('data-i18n');
+        if (i18n[lang][key] != null) el.textContent = i18n[lang][key];
+      });
+    }
+
+    function loadHabits() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveHabits(habits) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(habits));
+    }
+
+    function today() {
+      const d = new Date();
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+
+    function ensureCompletedDates(h) {
+      const completed = h.completedDates && Array.isArray(h.completedDates) ? h.completedDates : [];
+      const set = new Set(completed);
+      const todayStr = today();
+      if (h.done && h.date === todayStr && !set.has(todayStr)) set.add(todayStr);
+      if (!h.done && set.has(todayStr)) set.delete(todayStr);
+      return Array.from(set);
+    }
+
+    function getStreak(completedDates) {
+      if (!completedDates || completedDates.length === 0) return 0;
+      const sorted = [...completedDates].sort().reverse();
+      const todayStr = today();
+      if (sorted[0] !== todayStr) return 0;
+      let streak = 1;
+      for (let i = 1; i < sorted.length; i++) {
+        const prev = new Date(sorted[i - 1]);
+        const curr = new Date(sorted[i]);
+        prev.setDate(prev.getDate() - 1);
+        if (prev.toISOString().slice(0, 10) !== curr.toISOString().slice(0, 10)) break;
+        streak++;
+      }
+      return streak;
+    }
+
+    function getCalendarDays(year, month) {
+      const first = new Date(year, month, 1);
+      const startDay = first.getDay();
+      const last = new Date(year, month + 1, 0);
+      const daysInMonth = last.getDate();
+      const todayStr = today();
+      const cells = [];
+      for (let i = 0; i < startDay; i++) cells.push({ empty: true });
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+        cells.push({ dateStr, d, empty: false, isToday: dateStr === todayStr });
+      }
+      return cells;
+    }
+
+    function getDayCounts(habits) {
+      const counts = {};
+      habits.forEach(h => {
+        (h.completedDates || []).forEach(dateStr => {
+          counts[dateStr] = (counts[dateStr] || 0) + 1;
+        });
+      });
+      return counts;
+    }
+
+    function renderHeatmap(habits) {
+      const grid = document.getElementById('heatmapGrid');
+      const weekdaysEl = document.getElementById('heatmapWeekdays');
+      if (!grid || !weekdaysEl) return;
+      const lang = getLang();
+      const weekdays = i18n[lang].weekdays || ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      weekdaysEl.innerHTML = '';
+      weekdays.forEach(function (label) {
+        const w = document.createElement('div');
+        w.className = 'heatmap-weekday';
+        w.textContent = label;
+        weekdaysEl.appendChild(w);
+      });
+      const now = new Date();
+      const calDays = getCalendarDays(now.getFullYear(), now.getMonth());
+      const dayCounts = getDayCounts(habits);
+      grid.innerHTML = '';
+      calDays.forEach(function (cell) {
+        const div = document.createElement('div');
+        div.className = 'heatmap-cell';
+        if (cell.empty) {
+          div.setAttribute('data-count', '0');
+          div.classList.add('empty');
+          div.title = '';
+        } else {
+          const count = Math.min(3, dayCounts[cell.dateStr] || 0);
+          div.setAttribute('data-count', String(count));
+          div.textContent = cell.d;
+          div.title = cell.dateStr + (count > 0 ? ' — ' + count + (lang === 'zh' ? ' 个习惯' : ' habits') : '');
+          if (cell.isToday) div.classList.add('today');
+        }
+        grid.appendChild(div);
+      });
+    }
+
+    function showTipLoading(habitId) {
+      const wrap = document.getElementById('tip-' + habitId);
+      if (!wrap) return;
+      const existing = wrap.querySelector('.tip-box');
+      if (existing) existing.remove();
+      const box = document.createElement('div');
+      box.className = 'tip-box';
+      box.innerHTML = '<span>' + t('tipLoading') + '</span>';
+      wrap.appendChild(box);
+    }
+
+    function showTipContent(habitId, text, isError) {
+      const wrap = document.getElementById('tip-' + habitId);
+      if (!wrap) return;
+      const existing = wrap.querySelector('.tip-box');
+      if (existing) existing.remove();
+      const box = document.createElement('div');
+      box.className = 'tip-box' + (isError ? ' tip-box-error' : '');
+      box.innerHTML = '<span>' + escapeHtml(text) + '</span><div class="close-tip">' + t('gotIt') + '</div>';
+      box.querySelector('.close-tip').onclick = function () { box.remove(); };
+      wrap.appendChild(box);
+    }
+
+    async function fetchEmojis(habits, includeNudge) {
+      if (!habits || habits.length === 0 && !includeNudge) return;
+      try {
+        const res = await fetch('/api/emoji', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ names: habits.map(function (h) { return h.name; }), nudge: !!includeNudge, lang: getLang() }),
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.emojis && data.emojis.length) {
+          habits.forEach(function (h, i) { h.emoji = data.emojis[i] || h.emoji || '✨'; });
+          saveHabits(habits);
+        }
+        if (includeNudge && data.nudgeEmoji) nudgeEmoji = data.nudgeEmoji;
+      } catch (e) {}
+    }
+
+    async function fetchAISuggestion(habitName) {
+      const lang = getLang();
+      try {
+        const res = await fetch('/api/suggest', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ habitName, lang }),
+        });
+        if (!res.ok) throw new Error('API error');
+        const data = await res.json();
+        return data.suggestion || data.text || '';
+      } catch (e) {
+        return null;
+      }
+    }
+
+    async function showTip(habitId, habitName) {
+      const wrap = document.getElementById('tip-' + habitId);
+      if (!wrap) return;
+      showTipLoading(habitId);
+      const suggestion = await fetchAISuggestion(habitName);
+      if (suggestion) showTipContent(habitId, suggestion, false);
+      else showTipContent(habitId, t('tipError'), true);
+    }
+
+    function closeMenus() {
+      document.querySelectorAll('.menu-dropdown').forEach(el => el.remove());
+    }
+
+    function renderHabits() {
+      let habits = loadHabits();
+      const todayStr = today();
+      habits = habits.map(h => {
+        const done = h.date === todayStr ? h.done : false;
+        const completedDates = ensureCompletedDates({ ...h, done, date: todayStr });
+        return { ...h, done, date: todayStr, completedDates };
+      });
+      saveHabits(habits);
+
+      renderHeatmap(habits);
+
+      const list = document.getElementById('habitList');
+      list.innerHTML = '';
+
+      habits.forEach((h, idx) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        const tipWrap = document.createElement('div');
+        tipWrap.id = 'tip-' + h.id;
+        const streakCount = getStreak(h.completedDates || []);
+        const emoji = h.emoji || '·';
+
+        const nudgeLabel = t('cant') + (nudgeEmoji ? ' ' + nudgeEmoji : '');
+        card.innerHTML =
+          '<div class="habit-row">' +
+          '<input type="checkbox" id="cb-' + h.id + '" ' + (h.done ? 'checked' : '') + ' />' +
+          '<span class="habit-emoji" aria-hidden="true">' + emoji + '</span>' +
+          '<span class="habit-name' + (h.done ? ' done' : '') + '" id="name-' + h.id + '">' + escapeHtml(h.name) + '</span>' +
+          '<button type="button" class="btn btn-tired btn-small" data-id="' + h.id + '">' + nudgeLabel + '</button>' +
+          '<div class="menu-wrap">' +
+          '<button type="button" class="btn btn-menu" aria-label="Menu">' +
+          '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="6" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="18" r="1.5"/></svg>' +
+          '</button>' +
+          '</div></div>' +
+          '<div class="streak-row">' + (getLang() === 'zh' ? t('streak') + ' <strong>' + streakCount + '</strong> 天' : t('streak') + ': <strong>' + streakCount + '</strong>' + (streakCount === 1 ? ' day' : ' days')) + '</div>';
+        card.appendChild(tipWrap);
+
+        const cb = card.querySelector('input[type="checkbox"]');
+        const nameEl = card.querySelector('.habit-name');
+        cb.onchange = function () {
+          const idx = habits.findIndex(x => x.id === h.id);
+          if (idx === -1) return;
+          const wasDone = habits[idx].done;
+          habits[idx].done = cb.checked;
+          habits[idx].date = todayStr;
+          const completed = new Set(habits[idx].completedDates || []);
+          if (cb.checked) completed.add(todayStr); else completed.delete(todayStr);
+          habits[idx].completedDates = Array.from(completed);
+          saveHabits(habits);
+          nameEl.classList.toggle('done', cb.checked);
+          if (cb.checked && !wasDone) {
+            playDing();
+            if (typeof confetti === 'function') confetti({ particleCount: 60, spread: 55, origin: { y: 0.7 } });
+            var doneCount = habits.filter(function (x) { return x.done; }).length;
+            if (doneCount === 3) {
+              document.body.classList.add('screen-shake');
+              playVictory();
+              if (typeof confetti === 'function') {
+                confetti({ particleCount: 120, spread: 100, origin: { y: 0.5 } });
+                setTimeout(function () { confetti({ particleCount: 80, angle: 60, spread: 55, origin: { x: 0 } }); }, 150);
+                setTimeout(function () { confetti({ particleCount: 80, angle: 120, spread: 55, origin: { x: 1 } }); }, 250);
+              }
+              setTimeout(function () { document.body.classList.remove('screen-shake'); }, 500);
+            }
+          }
+          renderHabits();
+        };
+
+        card.querySelector('.btn-tired').onclick = function () { closeMenus(); showTip(h.id, h.name); };
+
+        const menuWrap = card.querySelector('.menu-wrap');
+        const menuBtn = card.querySelector('.btn-menu');
+        menuBtn.onclick = function (e) {
+          e.stopPropagation();
+          closeMenus();
+          const open = document.createElement('div');
+          open.className = 'menu-dropdown';
+          open.innerHTML = '<button type="button" class="menu-edit" data-i18n="edit">' + t('edit') + '</button><button type="button" class="delete">' + t('delete') + '</button>';
+          menuWrap.appendChild(open);
+          open.onclick = function (e) { e.stopPropagation(); };
+          open.querySelector('.menu-edit').onclick = function () { open.remove(); startEdit(h.id, h.name); };
+          open.querySelector('.delete').onclick = function () { open.remove(); deleteHabit(h.id); };
+          setTimeout(function () {
+            document.addEventListener('click', function onOut() {
+              document.removeEventListener('click', onOut);
+              if (open.parentNode) open.remove();
+            });
+          }, 0);
+        };
+
+        list.appendChild(card);
+      });
+
+      const addSection = document.getElementById('addSection');
+      addSection.classList.toggle('hidden', habits.length >= 3);
+    }
+
+    function startEdit(habitId, currentName) {
+      const nameEl = document.getElementById('name-' + habitId);
+      if (!nameEl) return;
+      const row = nameEl.closest('.habit-row');
+      let input = row.querySelector('.habit-edit-input');
+      if (input) return;
+      nameEl.classList.add('inline-edit');
+      input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'habit-edit-input';
+      input.value = currentName;
+      input.maxLength = 50;
+      row.insertBefore(input, nameEl.nextSibling);
+      input.focus();
+      input.select();
+      function saveEdit() {
+        const name = (input.value || '').trim();
+        if (name) {
+          const habits = loadHabits();
+          const idx = habits.findIndex(x => x.id === habitId);
+          if (idx !== -1) { habits[idx].name = name; saveHabits(habits); renderHabits(); }
+        } else {
+          nameEl.classList.remove('inline-edit');
+          input.remove();
+        }
+      }
+      input.onblur = saveEdit;
+      input.onkeydown = function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+        if (e.key === 'Escape') { input.value = currentName; input.blur(); }
+      };
+    }
+
+    function deleteHabit(habitId) {
+      if (!confirm(getLang() === 'zh' ? '确定删除这个习惯？' : 'Delete this habit?')) return;
+      let habits = loadHabits().filter(x => x.id !== habitId);
+      saveHabits(habits);
+      renderHabits();
+    }
+
+    function escapeHtml(s) {
+      const div = document.createElement('div');
+      div.textContent = s;
+      return div.innerHTML;
+    }
+
+    function addHabit() {
+      const habits = loadHabits();
+      if (habits.length >= 3) return;
+      const input = document.getElementById('habitInput');
+      const name = (input.value || '').trim();
+      if (!name) return;
+      habits.push({
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+        name,
+        done: false,
+        date: today(),
+      });
+      saveHabits(habits);
+      input.value = '';
+      renderHabits();
+      renderLang();
+      fetchEmojis(loadHabits(), false).then(function () { renderHabits(); });
+    }
+
+    document.getElementById('habitInput').onkeydown = function (e) {
+      if (e.key === 'Enter') addHabit();
+    };
+    document.getElementById('addBtn').onclick = addHabit;
+    document.getElementById('langToggle').onclick = function () {
+      setLang(getLang() === 'zh' ? 'en' : 'zh');
+    };
+
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', function (e) {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('installBanner').classList.remove('hidden');
+    });
+    document.getElementById('installBtn').onclick = function () {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(function () { deferredPrompt = null; });
+      document.getElementById('installBanner').classList.add('hidden');
+    };
+    window.addEventListener('appinstalled', function () {
+      document.getElementById('installBanner').classList.add('hidden');
+    });
+
+    setLang(getLang());
+    renderHabits();
+    fetchEmojis(loadHabits(), true).then(function () { renderHabits(); });
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(function () {});
+    }
+  </script>
+</body>
+</html>

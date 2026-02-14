@@ -1,0 +1,18 @@
+{
+  "name": "习惯追踪",
+  "short_name": "习惯",
+  "description": "每天三个小习惯，轻量坚持。Habit tracker PWA.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#e8e4f3",
+  "theme_color": "#6366f1",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
